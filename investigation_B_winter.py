@@ -1,11 +1,11 @@
 import init
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
+import sklearn
+import math
 
 
 df = init.get_cleaned_dataset2()
-
 
 # Feature Engineering
 # Add season column
@@ -45,5 +45,75 @@ plt.close()
 
 
 
+# Calculate correlation coefficient
+r = df_season0['rat_arrival_number'].corr(df_season0['bat_landing_number'])
+print("Correlation coefficient rat_arrival_number: ", r)
 
-# Calculate Simple Regression
+# Calculate single linear regression
+X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(df_season0[['rat_arrival_number']], df_season0['bat_landing_number'], test_size=0.4, random_state=0)
+
+model = sklearn.linear_model.LinearRegression()
+model.fit(X_train, y_train)
+
+coeff = model.coef_[0]
+intercept = model.intercept_
+
+print("X1 : ", coeff)
+print("X0 : ", intercept)
+print("-------")
+print("Result:")
+print("y = ", intercept, " - x *", coeff * -1)
+
+
+y_pred = model.predict(X_test)
+mae = sklearn.metrics.mean_absolute_error(y_test, y_pred)
+mse = sklearn.metrics.mean_squared_error(y_test, y_pred)
+rmse = math.sqrt(mse)
+
+
+y_max = y_test.max()
+y_min = y_test.min()
+
+normalised_rmse = rmse/(y_max-y_min)
+
+print("MAE: ", mae)
+print("MSE: ", mse)
+print("RMSE: ", rmse)
+print("Normalised RMSE: ", normalised_rmse)
+
+print("------------")
+
+# Calculate multiple linear regression
+
+x = df_season0[['rat_arrival_number', 'rat_minutes', 'minutes_after_sunset', 'food_availability']]
+y = df_season0['bat_landing_number']
+
+X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, test_size=0.4, random_state=0)
+
+model = sklearn.linear_model.LinearRegression()
+model.fit(X_train, y_train)
+
+# coeff = model.coef_[0]
+intercept = model.intercept_
+
+print("coefficient : ", model.coef_)
+print("intercept : ", intercept)
+
+
+y_pred = model.predict(X_test)
+mae = sklearn.metrics.mean_absolute_error(y_test, y_pred)
+mse = sklearn.metrics.mean_squared_error(y_test, y_pred)
+rmse = math.sqrt(mse)
+
+
+y_max = y_test.max()
+y_min = y_test.min()
+
+normalised_rmse = rmse/(y_max-y_min)
+r_2 = sklearn.metrics.r2_score(y_test, y_pred)
+
+print("MAE: ", mae)
+print("MSE: ", mse)
+print("RMSE: ", rmse)
+print("Normalised RMSE: ", normalised_rmse)
+print("R^2 :", r_2)
