@@ -48,8 +48,13 @@ plt.close()
 # Calculate correlation coefficient
 r = df_season0['rat_arrival_number'].corr(df_season0['bat_landing_number'])
 print("Correlation coefficient rat_arrival_number: ", r)
+print("------------")
+print()
+
 
 # Calculate single linear regression
+print("------------")
+print("Single Linear Regression")
 X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(df_season0[['rat_arrival_number']], df_season0['bat_landing_number'], test_size=0.4, random_state=0)
 
 model = sklearn.linear_model.LinearRegression()
@@ -81,9 +86,11 @@ print("MSE: ", mse)
 print("RMSE: ", rmse)
 print("Normalised RMSE: ", normalised_rmse)
 
-print("------------")
+print()
 
 # Calculate multiple linear regression
+print("------------")
+print("Multiple Linear Regression")
 
 x = df_season0[['rat_arrival_number', 'rat_minutes', 'minutes_after_sunset', 'food_availability']]
 y = df_season0['bat_landing_number']
@@ -96,8 +103,8 @@ model.fit(X_train, y_train)
 # coeff = model.coef_[0]
 intercept = model.intercept_
 
-print("coefficient : ", model.coef_)
-print("intercept : ", intercept)
+print("X1 : ", model.coef_)
+print("X0 : ", intercept)
 
 
 y_pred = model.predict(X_test)
@@ -116,4 +123,3 @@ print("MAE: ", mae)
 print("MSE: ", mse)
 print("RMSE: ", rmse)
 print("Normalised RMSE: ", normalised_rmse)
-print("R^2 :", r_2)
