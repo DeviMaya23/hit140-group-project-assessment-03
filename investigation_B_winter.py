@@ -16,27 +16,27 @@ df['minutes_after_sunset'] = df['hours_after_sunset'] * 60
 # Drop month column, non numerical data
 df = df.drop(columns=['month'])
 
-df_season0 = df[df['season'] == 0]
+df = df[df['season'] == 0]
 # df_season1 = df[df['season'] == 1]
 
 # Drop season column, used only to divide data
-df_season0 = df.drop(columns=['season'])  # winter
+df = df.drop(columns=['season'])  # winter
 
 
 # Scatterplot for all variables
 fig, axs = plt.subplots(2, 2)
 
-axs[0][0].scatter(df_season0['rat_arrival_number'], df_season0['bat_landing_number'])
+axs[0][0].scatter(df['rat_arrival_number'], df['bat_landing_number'])
 axs[0][0].set_title('rat_arrival_number')
 
 
-axs[0][1].scatter(df_season0['rat_minutes'], df_season0['bat_landing_number'])
+axs[0][1].scatter(df['rat_minutes'], df['bat_landing_number'])
 axs[0][1].set_title('rat_minutes')
 
-axs[1][0].scatter(df_season0['minutes_after_sunset'], df_season0['bat_landing_number'])
+axs[1][0].scatter(df['minutes_after_sunset'], df['bat_landing_number'])
 axs[1][0].set_title('minutes_after_sunset')
 
-axs[1][1].scatter(df_season0['food_availability'], df_season0['bat_landing_number'])
+axs[1][1].scatter(df['food_availability'], df['bat_landing_number'])
 axs[1][1].set_title('food_availability')
 
 plt.suptitle('Winter Dataset')
@@ -46,7 +46,7 @@ plt.close()
 
 
 # Calculate correlation coefficient
-r = df_season0['rat_arrival_number'].corr(df_season0['bat_landing_number'])
+r = df['rat_arrival_number'].corr(df['bat_landing_number'])
 print("Correlation coefficient rat_arrival_number: ", r)
 print("------------")
 print()
@@ -55,7 +55,7 @@ print()
 # Calculate single linear regression
 print("------------")
 print("Single Linear Regression")
-X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(df_season0[['rat_arrival_number']], df_season0['bat_landing_number'], test_size=0.4, random_state=0)
+X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(df[['rat_arrival_number']], df['bat_landing_number'], test_size=0.4, random_state=0)
 
 model = sklearn.linear_model.LinearRegression()
 model.fit(X_train, y_train)
@@ -92,8 +92,8 @@ print()
 print("------------")
 print("Multiple Linear Regression")
 
-x = df_season0[['rat_arrival_number', 'rat_minutes', 'minutes_after_sunset', 'food_availability']]
-y = df_season0['bat_landing_number']
+x = df[['rat_arrival_number', 'rat_minutes', 'minutes_after_sunset', 'food_availability']]
+y = df['bat_landing_number']
 
 X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, test_size=0.4, random_state=0)
 
