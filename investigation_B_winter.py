@@ -1,6 +1,8 @@
 import init
 import matplotlib.pyplot as plt
 import numpy as np
+import statsmodels.api as sm
+import seaborn as sns
 import sklearn
 import math
 
@@ -10,14 +12,14 @@ df = init.get_cleaned_dataset2()
 # Feature Engineering
 # Add season column
 df['season'] = np.where(df['month'] < 3, 0, 1)
-# Add minutes_after_sunset
-df['minutes_after_sunset'] = df['hours_after_sunset'] * 60
 
 # Drop month column, non numerical data
 df = df.drop(columns=['month'])
+df = df.drop(columns=['time'])
+
+print(df)
 
 df = df[df['season'] == 0]
-# df_season1 = df[df['season'] == 1]
 
 # Drop season column, used only to divide data
 df = df.drop(columns=['season'])  # winter
@@ -33,8 +35,8 @@ axs[0][0].set_title('rat_arrival_number')
 axs[0][1].scatter(df['rat_minutes'], df['bat_landing_number'])
 axs[0][1].set_title('rat_minutes')
 
-axs[1][0].scatter(df['minutes_after_sunset'], df['bat_landing_number'])
-axs[1][0].set_title('minutes_after_sunset')
+axs[1][0].scatter(df['hours_after_sunset'], df['bat_landing_number'])
+axs[1][0].set_title('hours_after_sunset')
 
 axs[1][1].scatter(df['food_availability'], df['bat_landing_number'])
 axs[1][1].set_title('food_availability')
@@ -44,40 +46,59 @@ plt.show()
 plt.close()
 
 
+# Heatmap
 
-# Calculate correlation coefficient
-r = df['rat_arrival_number'].corr(df['bat_landing_number'])
-print("Correlation coefficient rat_arrival_number: ", r)
-print("------------")
-print()
+# Plot correlation matrix
+corr = df.corr()
+
+# Plot the pairwise correlation as heatmap
+ax = sns.heatmap(
+    corr,
+    vmin=-1, vmax=1, center=0,
+    cmap=sns.diverging_palette(20, 220, n=200),
+    square=False,
+    annot=True
+)
+
+# customise the labels
+ax.set_xticklabels(
+    ax.get_xticklabels(),
+    rotation=45,
+    horizontalalignment='right'
+)
+
+plt.show()
+plt.close()
 
 
 # Calculate single linear regression
 print("------------")
 print("Single Linear Regression")
-X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(df[['rat_arrival_number']], df['bat_landing_number'], test_size=0.4, random_state=0)
 
-model = sklearn.linear_model.LinearRegression()
-model.fit(X_train, y_train)
 
-coeff = model.coef_[0]
-intercept = model.intercept_
+x = df[['rat_arrival_number']]
+y = df['bat_landing_number']
 
-print("X1 : ", coeff)
-print("X0 : ", intercept)
+x = sm.add_constant(x)
+model = sm.OLS(y, x).fit()
+pred = model.predict(x)
+
+print(model.params)
+
+intercept = model.params["const"]
+coeff = model.params["rat_arrival_number"]
 print("-------")
 print("Result:")
-print("y = ", intercept, " - x *", coeff * -1)
+print("y = ", intercept, " + x *", coeff)
 
 
-y_pred = model.predict(X_test)
-mae = sklearn.metrics.mean_absolute_error(y_test, y_pred)
-mse = sklearn.metrics.mean_squared_error(y_test, y_pred)
+mae = sklearn.metrics.mean_absolute_error(y, pred)
+mse = sklearn.metrics.mean_squared_error(y, pred)
 rmse = math.sqrt(mse)
 
 
-y_max = y_test.max()
-y_min = y_test.min()
+y_max = y.max()
+y_min = y.min()
 
 normalised_rmse = rmse/(y_max-y_min)
 
@@ -92,32 +113,38 @@ print()
 print("------------")
 print("Multiple Linear Regression")
 
-x = df[['rat_arrival_number', 'rat_minutes', 'minutes_after_sunset', 'food_availability']]
+x = df[['rat_arrival_number', 'rat_minutes', 'hours_after_sunset', 'food_availability']]
 y = df['bat_landing_number']
 
-X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, test_size=0.4, random_state=0)
+x = sm.add_constant(x)
+model = sm.OLS(y, x).fit()
+pred = model.predict(x)
 
-model = sklearn.linear_model.LinearRegression()
-model.fit(X_train, y_train)
+print(model.params)
+intercept = model.params["const"]
+coeff_rat_arrival_number = model.params["rat_arrival_number"]
+coeff_rat_minutes = model.params["rat_minutes"]
+coeff_hours_after_sunset = model.params["hours_after_sunset"]
+coeff_food_availability = model.params["food_availability"]
 
-# coeff = model.coef_[0]
-intercept = model.intercept_
+print("-------")
+print("Result:")
+print("y = ", intercept, " + x1 *", coeff_rat_arrival_number,
+" + x2 *", coeff_rat_minutes,
+" + x3 *", coeff_hours_after_sunset,
+" + x4 *", coeff_food_availability,
+)
 
-print("X1 : ", model.coef_)
-print("X0 : ", intercept)
-
-
-y_pred = model.predict(X_test)
-mae = sklearn.metrics.mean_absolute_error(y_test, y_pred)
-mse = sklearn.metrics.mean_squared_error(y_test, y_pred)
+mae = sklearn.metrics.mean_absolute_error(y, pred)
+mse = sklearn.metrics.mean_squared_error(y, pred)
 rmse = math.sqrt(mse)
 
 
-y_max = y_test.max()
-y_min = y_test.min()
+y_max = y.max()
+y_min = y.min()
 
 normalised_rmse = rmse/(y_max-y_min)
-r_2 = sklearn.metrics.r2_score(y_test, y_pred)
+# r_2 = sklearn.metrics.r2_score(y, pred)
 
 print("MAE: ", mae)
 print("MSE: ", mse)

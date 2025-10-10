@@ -27,8 +27,8 @@ model.fit(X_train, y_train)
 coeff = model.coef_[0]
 intercept = model.intercept_
 
-print("X1 : ", coeff)
 print("X0 : ", intercept)
+print("X1 : ", coeff)
 print("-------")
 print("Result:")
 print("y = ", intercept, " - x *", coeff * -1)
