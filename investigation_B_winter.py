@@ -7,23 +7,30 @@ import sklearn
 import math
 
 
-df = init.get_cleaned_dataset2()
+def getWinterData():
+    df = init.get_cleaned_dataset2()
 
-# Feature Engineering
-# Add season column
-df['season'] = np.where(df['month'] < 3, 0, 1)
+    # Feature Engineering
+    # Add season column
+    df['season'] = np.where(df['month'] < 3, 0, 1)
 
-# Drop month column, non numerical data
-df = df.drop(columns=['month'])
-df = df.drop(columns=['time'])
+    # Drop month column, non numerical data
+    df = df.drop(columns=['month'])
+    df = df.drop(columns=['time'])
+    df = df[df['season'] == 0]
 
-print(df)
+    # Non linear transformation
+    # Add squared value
+    df['hours_after_sunset_squared'] = df['hours_after_sunset'] ** 2
+    df['food_availability_squared'] = df['food_availability'] ** 2
 
-df = df[df['season'] == 0]
+    # Drop season column, used only to divide data
+    df = df.drop(columns=['season'])  # winter
 
-# Drop season column, used only to divide data
-df = df.drop(columns=['season'])  # winter
+    return df
 
+
+df = getWinterData()
 
 # Scatterplot for all variables
 fig, axs = plt.subplots(2, 2)
@@ -42,6 +49,26 @@ axs[1][1].scatter(df['food_availability'], df['bat_landing_number'])
 axs[1][1].set_title('food_availability')
 
 plt.suptitle('Winter Dataset')
+plt.show()
+plt.close()
+
+# Non Linear Transformation
+fig, axs = plt.subplots(2, 2)
+
+axs[0][0].scatter(df['food_availability'], df['bat_landing_number'])
+axs[0][0].set_title('food_availability')
+
+
+axs[0][1].scatter(df['food_availability_squared'], df['bat_landing_number'])
+axs[0][1].set_title('food_availability_squared')
+
+axs[1][0].scatter(df['hours_after_sunset'], df['bat_landing_number'])
+axs[1][0].set_title('hours_after_sunset')
+
+axs[1][1].scatter(df['hours_after_sunset_squared'], df['bat_landing_number'])
+axs[1][1].set_title('hours_after_sunset_squared')
+
+plt.suptitle('Squared Dataset')
 plt.show()
 plt.close()
 
@@ -101,11 +128,13 @@ y_max = y.max()
 y_min = y.min()
 
 normalised_rmse = rmse/(y_max-y_min)
+r_2 = sklearn.metrics.r2_score(y, pred)
 
 print("MAE: ", mae)
 print("MSE: ", mse)
 print("RMSE: ", rmse)
 print("Normalised RMSE: ", normalised_rmse)
+print("R2: ", r_2)
 
 print()
 
@@ -113,26 +142,33 @@ print()
 print("------------")
 print("Multiple Linear Regression")
 
-x = df[['rat_arrival_number', 'rat_minutes', 'hours_after_sunset', 'food_availability']]
+df = getWinterData()
+
+x = df[['rat_arrival_number', 'rat_minutes', 'hours_after_sunset', 'food_availability', 'hours_after_sunset_squared', 'food_availability_squared']]
 y = df['bat_landing_number']
 
 x = sm.add_constant(x)
 model = sm.OLS(y, x).fit()
 pred = model.predict(x)
 
-print(model.params)
+print(model.summary())
+
 intercept = model.params["const"]
 coeff_rat_arrival_number = model.params["rat_arrival_number"]
 coeff_rat_minutes = model.params["rat_minutes"]
 coeff_hours_after_sunset = model.params["hours_after_sunset"]
 coeff_food_availability = model.params["food_availability"]
+coeff_hours_after_sunset_squared = model.params["hours_after_sunset_squared"]
+coeff_food_availability_squared = model.params["food_availability_squared"]
 
 print("-------")
 print("Result:")
 print("y = ", intercept, " + x1 *", coeff_rat_arrival_number,
 " + x2 *", coeff_rat_minutes,
 " + x3 *", coeff_hours_after_sunset,
-" + x4 *", coeff_food_availability,
+" + x4 *", coeff_hours_after_sunset_squared,
+" + x5 *", coeff_food_availability,
+" + x6 *", coeff_food_availability_squared,
 )
 
 mae = sklearn.metrics.mean_absolute_error(y, pred)
@@ -144,9 +180,10 @@ y_max = y.max()
 y_min = y.min()
 
 normalised_rmse = rmse/(y_max-y_min)
-# r_2 = sklearn.metrics.r2_score(y, pred)
+r_2 = sklearn.metrics.r2_score(y, pred)
 
 print("MAE: ", mae)
 print("MSE: ", mse)
 print("RMSE: ", rmse)
 print("Normalised RMSE: ", normalised_rmse)
+print("R2 ", r_2)
