@@ -1,40 +1,44 @@
-# spring_analysis.py
+# main.py
 # Author: Asha Devi
 # Investigation B (Spring)
 
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
-import sklearn
+import sklearn.metrics
 import math
 from spring_features import add_new_features
-from sklearn.metrics import r2_score, mean_squared_error
-import numpy as np
+import data_init as init
 
-# ======== Load and Prepare Data ========
-df = pd.read_csv("Datasets/dataset2.csv")
+# ======== Load Cleaned Data ========
+df = init.get_cleaned_dataset2()
 
-# Keep only Spring data (month >= 3)
-df = df[df['month'] >= 3]
+print(" Columns in dataset:", df.columns)
 
-# Add new feature columns from spring_features.py
+# ======== (TEMP) Remove Month Filter for Debugging ========
+# If your CSV doesn't have 'month', this filter removes all rows — disable for now
+# df = df[df['month'] >= 3]
+print("Rows before feature creation:", len(df))
+
+# ======== Add New Feature Columns ========
 df = add_new_features(df)
 
-# Drop text/time columns if not needed
-if 'time' in df.columns:
-    df = df.drop(columns=['time'])
-if 'month' in df.columns:
-    df = df.drop(columns=['month'])
+# Drop text columns if they exist
+for col in ['time', 'month']:
+    if col in df.columns:
+        df = df.drop(columns=[col])
 
-print("Spring data shape:", df.shape)
-print(df.head())
+print(" Spring data shape:", df.shape)
+print(df.head(), "\n")
 
-# ======== Simple Scatterplot ========
+# ======== Scatterplot ========
 sns.set_style("whitegrid")
 plt.figure(figsize=(8, 5))
 sns.scatterplot(x='rat_arrival_number', y='bat_landing_number', data=df)
 plt.title('Spring: Bat vs Rat Arrivals')
+plt.xlabel('Rat Arrival Number')
+plt.ylabel('Bat Landing Number')
+plt.tight_layout()
 plt.savefig('spring_scatter.png', dpi=150)
 plt.show()
 
@@ -46,36 +50,38 @@ plt.tight_layout()
 plt.savefig('spring_heatmap.png', dpi=150)
 plt.show()
 
-# ======== Simple Linear Regression ========
+# ======== Linear Regression ========
 x = sm.add_constant(df[['rat_arrival_number']])
 y = df['bat_landing_number']
 model = sm.OLS(y, x).fit()
 pred = model.predict(x)
 
-print("\nLinear Regression Summary (Spring):")
+print("\n Linear Regression Summary (Spring):")
 print(model.summary())
 
-# ======== Error and Accuracy Metrics ========
+# ======== Model Performance Metrics ========
 mae = sklearn.metrics.mean_absolute_error(y, pred)
 mse = sklearn.metrics.mean_squared_error(y, pred)
 rmse = math.sqrt(mse)
+r2 = sklearn.metrics.r2_score(y, pred)
+nrmse = rmse / (max(y) - min(y))
 
-# Calculate R² and NRMSE
-r2 = r2_score(y, pred)
-nrmse = rmse / (y.max() - y.min())
-
-print("\nMAE:", mae)
-print("RMSE:", rmse)
-print("R² Score:", round(r2, 4))
-print("NRMSE:", round(nrmse, 4))
+print("\n Model Performance:")
+print(f"MAE   = {mae:.4f}")
+print(f"RMSE  = {rmse:.4f}")
+print(f"R²    = {r2:.4f}")
+print(f"NRMSE = {nrmse:.4f}")
 
 # ======== Regression Plot ========
 plt.figure(figsize=(8, 5))
-sns.regplot(x='rat_arrival_number',
-            y='bat_landing_number',
-            data=df,
-            ci=None,
-            color='purple')
-plt.title('Spring Regression: Bat vs Rat Arrivals')
+sns.scatterplot(x=y, y=pred)
+sns.lineplot(x=y, y=y, color='red')
+plt.title('Spring: Predicted vs Actual Bat Landings')
+plt.xlabel('Actual Values')
+plt.ylabel('Predicted Values')
+plt.tight_layout()
 plt.savefig('spring_regression.png', dpi=150)
 plt.show()
+
+print("\n All graphs saved successfully as:")
+print("spring_scatter.png, spring_heatmap.png, spring_regression.png")
