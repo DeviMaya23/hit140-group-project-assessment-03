@@ -100,3 +100,18 @@ except Exception as e:
     print(" Regression error:", e)
 
 print("\n=== Script Completed ===")
+# ======== Multiple Linear Regression ========
+x_multi = sm.add_constant(df[['rat_arrival_number', 'rat_minutes', 'food_availability']])
+y = df['bat_landing_number']
+
+multi_model = sm.OLS(y, x_multi).fit()
+multi_pred = multi_model.predict(x_multi)
+
+print("\nMultiple Linear Regression Summary (Spring):")
+print(multi_model.summary())
+
+# Compare R² between simple and multiple regression
+r2_multi = sklearn.metrics.r2_score(y, multi_pred)
+print(f"\nModel Comparison:")
+print(f"Single Regression R²: {r2:.4f}")
+print(f"Multiple Regression R²: {r2_multi:.4f}")
