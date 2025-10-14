@@ -101,7 +101,17 @@ except Exception as e:
 
 print("\n=== Script Completed ===")
 # ======== Multiple Linear Regression ========
-x_multi = sm.add_constant(df[['rat_arrival_number', 'rat_minutes', 'food_availability']])
+
+# Feature Engineering for Non Linear Transformation
+df['hours_after_sunset_squared'] = df['hours_after_sunset'] ** 2
+df['food_availability_squared'] = df['food_availability'] ** 2
+
+x_multi = sm.add_constant(df[['rat_arrival_number',
+                          'rat_minutes',
+                          'food_availability',
+                          'hours_after_sunset_squared',
+                          'food_availability_squared']])
+
 y = df['bat_landing_number']
 
 multi_model = sm.OLS(y, x_multi).fit()
@@ -110,8 +120,21 @@ multi_pred = multi_model.predict(x_multi)
 print("\nMultiple Linear Regression Summary (Spring):")
 print(multi_model.summary())
 
-# Compare R² between simple and multiple regression
+
+mae = sklearn.metrics.mean_absolute_error(y, multi_pred)
+mse = sklearn.metrics.mean_squared_error(y, multi_pred)
+rmse = math.sqrt(mse)
 r2_multi = sklearn.metrics.r2_score(y, multi_pred)
+nrmse = rmse / (max(y) - min(y))
+
+print("\nModel Performance:")
+print(f"MAE   = {mae:.4f}")
+print(f"MSE   = {mse:.4f}")
+print(f"RMSE  = {rmse:.4f}")
+print(f"R²    = {r2_multi:.4f}")
+print(f"NRMSE = {nrmse:.4f}")
+
+# Compare R² between simple and multiple regression
 print(f"\nModel Comparison:")
 print(f"Single Regression R²: {r2:.4f}")
 print(f"Multiple Regression R²: {r2_multi:.4f}")
